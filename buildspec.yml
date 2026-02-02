@@ -2,37 +2,50 @@ version: 0.2
 
 env:
   secrets-manager:
-    SSH_KEY: ec2-ssh-key
+    SSH_KEY: ec2-ssh-key # Fetch the private key from AWS Secrets Manager and store it in the $SSH_KEY variable
 
 phases:
   install:
     runtime-versions:
-      nodejs: 20
+      nodejs: 20 # Use Node.js version 20
     commands:
       - echo "Installing dependencies..."
-      - npm install
+      - npm install # Install dependencies for the build environment (if needed for testing)
   build:
     commands:
       - echo "Running tests (if any)..."
-      # - npm test
+      # - npm test # Placeholder for running automated tests
   post_build:
     commands:
       - echo "Deploying to EC2 via SSH..."
+      
+      # 1. Create a temporary PEM file from the secret variable
       - echo "$SSH_KEY" > key.pem
+      
+      # 2. Set permissions so only the owner can read it (required by SSH)
       - chmod 400 key.pem
+      
+      # 3. Connect to the EC2 instance and run deployment commands
+      # -o StrictHostKeyChecking=no: Don't ask to verify the server's fingerprint (auto-accept)
       - ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@13.233.15.135 '
+          # Check if the project folder already exists
           if [ -d "aws-devtools-demo" ]; then
             echo "Repo exists, pulling changes...";
-            cd aws-devtools-demo && git pull origin main;
+            cd aws-devtools-demo && git pull origin main; # Update existing code
           else
             echo "Cloning repo...";
-            git clone https://github.com/Jaykaravadra77/aws-devtools-demo.git && cd aws-devtools-demo;
+            git clone https://github.com/Jaykaravadra77/aws-devtools-demo.git && cd aws-devtools-demo; # Download for the first time
           fi
+          
           echo "Installing server dependencies...";
-          npm install;
+          npm install; # Install dependencies on the actual server
+          
           echo "Restarting app with PM2...";
+          # Start the app if it is not running, otherwise just reload it (zero-downtime update)
           pm2 start server.js --name "demo-app" || pm2 reload "demo-app";
-          pm2 save;
+          pm2 save; # Save the process list so it restarts on reboot
         '
+        
+      # 4. Cleanup: Remove the sensitive key file from the build environment
       - rm key.pem
       - echo "Deployment completed successfully!"
