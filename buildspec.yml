@@ -1,0 +1,38 @@
+version: 0.2
+
+env:
+  secrets-manager:
+    SSH_KEY: ec2-ssh-key
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - echo "Installing dependencies..."
+      - npm install
+  build:
+    commands:
+      - echo "Running tests (if any)..."
+      # - npm test
+  post_build:
+    commands:
+      - echo "Deploying to EC2 via SSH..."
+      - echo "$SSH_KEY" > key.pem
+      - chmod 400 key.pem
+      - ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@13.233.15.135 '
+          if [ -d "aws-devtools-demo" ]; then
+            echo "Repo exists, pulling changes...";
+            cd aws-devtools-demo && git pull origin main;
+          else
+            echo "Cloning repo...";
+            git clone https://github.com/Jaykaravadra77/aws-devtools-demo.git && cd aws-devtools-demo;
+          fi
+          echo "Installing server dependencies...";
+          npm install;
+          echo "Restarting app with PM2...";
+          pm2 start server.js --name "demo-app" || pm2 reload "demo-app";
+          pm2 save;
+        '
+      - rm key.pem
+      - echo "Deployment completed successfully!"
