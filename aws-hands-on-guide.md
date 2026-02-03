@@ -18,21 +18,21 @@ In this phase, we build the "heart" of our project. A simple API that stores dat
 ### 📋 Phase 2: GitHub (Source Control)
 Get your code into a hosted repository so AWS can pull it.
 - **Tasks:**
-  - [ ] Create a GitHub repository.
-  - [ ] Initialize Git locally and push code.
+  - [x] Create a GitHub repository.
+  - [x] Initialize Git locally and push code.
 
 ### 📋 Phase 3: EC2 Infrastructure (Production Server)
 Set up the machine where your code will actually run.
 - **Tasks:**
-  - [ ] Launch EC2 Instance (Amazon Linux 2023).
-  - [ ] Install Node.js & PM2.
-  - [ ] Open Port 3000 in Security Group.
+  - [x] Launch EC2 Instance (Amazon Linux 2023).
+  - [x] Install Node.js & PM2.
+  - [x] Open Port 3000 in Security Group.
 
 ### 📋 Phase 4: Secrets & Security (The SSH Key)
 Securely store your access key so AWS can "talk" to your EC2.
 - **Tasks:**
-  - [ ] Store PEM key in AWS Secrets Manager.
-  - [ ] Create IAM Role for CodeBuild.
+  - [x] Store PEM key in AWS Secrets Manager.
+  - [x] Create IAM Role for CodeBuild.
 
 ### 📋 Phase 5: CodeBuild & CI (Automated Build/Deploy)
 Create the brain that builds your code and sends it to EC2.
