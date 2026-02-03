@@ -27,24 +27,8 @@ phases:
       
       # 3. Connect to the EC2 instance and run deployment commands
       # -o StrictHostKeyChecking=no: Don't ask to verify the server's fingerprint (auto-accept)
-      - ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@13.233.15.135 '
-          # Check if the project folder already exists
-          if [ -d "aws-devtools-demo" ]; then
-            echo "Repo exists, pulling changes...";
-            cd aws-devtools-demo && git pull origin main; # Update existing code
-          else
-            echo "Cloning repo...";
-            git clone https://github.com/Jaykaravadra77/aws-devtools-demo.git && cd aws-devtools-demo; # Download for the first time
-          fi
-          
-          echo "Installing server dependencies...";
-          npm install; # Install dependencies on the actual server
-          
-          echo "Restarting app with PM2...";
-          # Start the app if it is not running, otherwise just reload it (zero-downtime update)
-          pm2 start server.js --name "demo-app" || pm2 reload "demo-app";
-          pm2 save; # Save the process list so it restarts on reboot
-        '
+      - |
+        ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@13.233.15.135 'if [ -d "aws-devtools-demo" ]; then echo "Repo exists, pulling changes..."; cd aws-devtools-demo && git pull origin main; else echo "Cloning repo..."; git clone https://github.com/Jaykaravadra77/aws-devtools-demo.git && cd aws-devtools-demo; fi; echo "Installing server dependencies..."; npm install; echo "Restarting app with PM2..."; pm2 start server.js --name "demo-app" || pm2 reload "demo-app"; pm2 save;'
         
       # 4. Cleanup: Remove the sensitive key file from the build environment
       - rm key.pem
